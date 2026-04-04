@@ -12,10 +12,15 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from loguru import logger
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOGGING_CONFIG = None
+
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -145,6 +150,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
 }
 
 SIMPLE_JWT = {
@@ -162,10 +168,51 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'usuarios.MiUsuario'
 
+LOGURU_LOGGING = {
+    'handlers': [
+        {
+            'sink': LOGS_DIR / 'debug.log',
+            'level': 'DEBUG',
+            'filter': lambda record: record['level'].no < logger.level('ERROR').no,
+            'format': '{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}',
+            'rotation': '10 MB',
+            'retention': '2 days',
+            'compression': 'zip',
+        },
+        {
+            'sink': LOGS_DIR / 'error.log',
+            'level': 'ERROR',
+            'filter': lambda record: record['level'].no >= logger.level('ERROR').no,
+            'format': '{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}',
+            'rotation': '10 MB',
+            'retention': '2 days',
+            'compression': 'zip',
+            'backtrace': True,
+            'diagnose': True,
+        },
+    ]
+}
+
+logger.configure(**LOGURU_LOGGING)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'loguru': {
+            'class': 'config.interceptor.InterceptorHandler',
+        },
+    },
+    'root': {
+        'handlers': ['loguru'],
+        'level': 'DEBUG',
+    },
+}
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Python Metrics API',
     'DESCRIPTION': 'Documentación interactiva',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # Otras configuraciones
+    'COMPONENT_SPLIT_REQUEST': True,
 }

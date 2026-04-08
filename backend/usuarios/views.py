@@ -58,8 +58,10 @@ class LoginView(TokenObtainPairView):
                 str(exc),
             )
             raise
-
-
+# Obtiene el token personalizado que incluye el rol del usuario para diferenciar entre CLIENT y ADMIN
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    
 class TokenRefreshCustomView(TokenRefreshView):
     permission_classes = (AllowAny,)
 

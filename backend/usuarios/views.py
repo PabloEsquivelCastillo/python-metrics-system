@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from loguru import logger
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .serializers import RegistroSerializer # Asegúrate de importar tu serializador
+from .serializers import RegistroSerializer, CustomTokenObtainPairSerializer # Asegúrate de importar tu serializador
 
 # Obtenemos tu modelo personalizado
 User = get_user_model()
@@ -34,6 +34,8 @@ class RegistroView(generics.CreateAPIView):
 
 class LoginView(TokenObtainPairView):
     permission_classes = (AllowAny,)
+    # Usamos nuestro serializer personalizado que agrega el rol al token
+    serializer_class = CustomTokenObtainPairSerializer 
 
     def post(self, request, *args, **kwargs):
         logger.debug(
@@ -58,9 +60,6 @@ class LoginView(TokenObtainPairView):
                 str(exc),
             )
             raise
-# Obtiene el token personalizado que incluye el rol del usuario para diferenciar entre CLIENT y ADMIN
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
     
 class TokenRefreshCustomView(TokenRefreshView):
     permission_classes = (AllowAny,)

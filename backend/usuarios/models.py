@@ -15,13 +15,26 @@ class MiUsuarioManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', MiUsuario.Role.ADMIN)
         return self.create_user(email, password, **extra_fields)
 
 # 2. El Modelo: Tu tabla personalizada
 class MiUsuario(AbstractBaseUser, PermissionsMixin):
+    # Definimos los roles para los usuarios
+    class Role(models.TextChoices):
+        ADMIN  = 'admin',  'Administrador'
+        CLIENT = 'client', 'Cliente'
+    
     email = models.EmailField(unique=True) # Usaremos esto para el login
     nombre_completo = models.CharField(max_length=255)
     telefono = models.CharField(max_length=20, blank=True, null=True)
+    
+    #campo de rol para diferenciar entre admin y cliente
+    role = models.CharField(       
+        max_length=10,
+        choices=Role.choices,
+        default=Role.CLIENT
+    )
     
     # Campos obligatorios para que el admin de Django funcione bien
     is_active = models.BooleanField(default=True)

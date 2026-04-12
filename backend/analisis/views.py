@@ -8,7 +8,7 @@ from drf_spectacular.utils import extend_schema
 from loguru import logger
 from .models import UploadBatch, PythonAnalysis, PythonMetrics
 from .serializers import UploadBatchSerializer, PythonAnalysisSerializer, PythonAnalysisListSerializer, AnalysisDetailSerializer
-from .analyzer import analizar_archivo, calcular_clasificacion, generar_resumen
+from .analyzer import analizar_archivo, calcular_clasificacion, generar_resumen, validar_archivo_python
 
 
 class PythonAnalysisListView(generics.ListAPIView):
@@ -114,6 +114,25 @@ class UploadBatchView(APIView):
                 invalid,
             )
             raise ValidationError({'files': [f'Solo se permiten archivos .py. Inválidos: {invalid}']})
+
+        invalid_content = []
+        for archivo in files:
+            is_valid_python, validation_message = validar_archivo_python(archivo)
+            if not is_valid_python:
+                invalid_content.append(f'{archivo.name}: {validation_message}')
+
+        if invalid_content:
+            logger.warning(
+                'Carga de lote rechazada user_id={} motivo=contenido_invalido total_invalidos={} archivos_invalidos={}',
+                getattr(request.user, 'id', None),
+                len(invalid_content),
+                invalid_content,
+            )
+            raise ValidationError({
+                'files': [
+                    'Uno o mas archivos no contienen codigo Python valido. ' + ' | '.join(invalid_content)
+                ]
+            })
 
         # crear el batch
         batch_serializer = UploadBatchSerializer(

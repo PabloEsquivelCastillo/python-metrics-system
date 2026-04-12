@@ -1,9 +1,10 @@
 
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { FiEye, FiEyeOff, FiUser, FiMail, FiPhone, FiLock, FiUserPlus } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiUser, FiMail, FiPhone, FiLock, FiUserPlus, FiCheck, FiX } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
+import { validatePassword, getPasswordStrength } from '../utils/passwordValidator'
 
 function RegisterPage() {
     const navigate = useNavigate()
@@ -29,8 +30,21 @@ function RegisterPage() {
             return
         }
 
-        if (form.password.length < 6) {
-            Swal.fire({ icon: 'warning', title: 'Contraseña muy corta', text: 'La contraseña debe tener al menos 6 caracteres.', confirmButtonColor: '#2C89F5' })
+        const passwordValidation = validatePassword(form.password)
+        if (!passwordValidation.isValid) {
+            const missing = []
+            if (!passwordValidation.requirements.minLength) missing.push('12 caracteres mínimo')
+            if (!passwordValidation.requirements.hasUppercase) missing.push('una mayúscula')
+            if (!passwordValidation.requirements.hasLowercase) missing.push('una minúscula')
+            if (!passwordValidation.requirements.hasNumber) missing.push('un número')
+            if (!passwordValidation.requirements.hasSpecialChar) missing.push('un carácter especial')
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Contraseña no cumple requisitos',
+                html: `<div style="text-align: left;">La contraseña debe tener:<br/><br/>${missing.map(m => `• ${m}`).join('<br/>')}`,
+                confirmButtonColor: '#2C89F5'
+            })
             return
         }
 
@@ -108,14 +122,55 @@ function RegisterPage() {
                         <div style={{ position: 'relative' }}>
                             <FiLock size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                             <input type={showPass ? 'text' : 'password'} name="password" className="form-control"
-                                placeholder="Mínimo 6 caracteres" value={form.password}
-                                onChange={handleChange} required minLength={6}
+                                placeholder="Min. 12 caracteres, mayús, minús, número, símbolo" value={form.password}
+                                onChange={handleChange} required minLength={12}
                                 style={{ height: 48, paddingLeft: 42, paddingRight: 45 }} />
                             <button type="button" onClick={() => setShowPass(!showPass)}
                                 style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: '#999' }}>
                                 {showPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                             </button>
                         </div>
+                        
+                        {form.password && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#f8f9fa', borderRadius: 8, fontSize: 13 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                    <span>Fortaleza:</span>
+                                    <div style={{ width: 120, height: 6, background: '#e9ecef', borderRadius: 3, overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${(Object.values(validatePassword(form.password).requirements).filter(Boolean).length / 5) * 100}%`,
+                                            height: '100%',
+                                            background: getPasswordStrength(form.password).color,
+                                            transition: 'all 0.3s ease'
+                                        }} />
+                                    </div>
+                                    <span style={{ color: getPasswordStrength(form.password).color, fontWeight: 600 }}>
+                                        {getPasswordStrength(form.password).text}
+                                    </span>
+                                </div>
+                                
+                                <div style={{ display: 'grid', gap: 6 }}>
+                                    {[
+                                        { req: 'minLength', text: '12 caracteres mínimo' },
+                                        { req: 'hasUppercase', text: 'Una mayúscula (A-Z)' },
+                                        { req: 'hasLowercase', text: 'Una minúscula (a-z)' },
+                                        { req: 'hasNumber', text: 'Un número (0-9)' },
+                                        { req: 'hasSpecialChar', text: 'Carácter especial (!@#$...)' },
+                                    ].map((item) => {
+                                        const met = validatePassword(form.password).requirements[item.req]
+                                        return (
+                                            <div key={item.req} style={{ display: 'flex', alignItems: 'center', gap: 8, color: met ? '#198754' : '#adb5bd' }}>
+                                                {met ? (
+                                                    <FiCheck size={16} style={{ color: '#198754', flexShrink: 0 }} />
+                                                ) : (
+                                                    <FiX size={16} style={{ color: '#adb5bd', flexShrink: 0 }} />
+                                                )}
+                                                <span>{item.text}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <button type="submit" className="btn btn-primary-custom w-100" disabled={loading}
                         style={{ height: 48, fontSize: '0.95rem' }}>

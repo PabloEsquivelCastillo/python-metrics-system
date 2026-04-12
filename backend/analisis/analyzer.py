@@ -71,8 +71,10 @@ def _analizar_con_flake8(contenido):
             tmp.write(contenido)
             tmp_path = tmp.name
 
+        import sys
+        flake8_path = os.path.join(os.path.dirname(sys.executable), 'flake8')
         result = subprocess.run(
-            ['flake8', tmp_path],
+            [flake8_path, tmp_path],
             capture_output=True,
             text=True
         )
@@ -101,13 +103,24 @@ def _analizar_con_flake8(contenido):
 
 
 
-def calcular_clasificacion(cyclomatic_complexity):
+def calcular_clasificacion(cyclomatic_complexity, pep8_compliance):
+    # Puntaje de complejidad: 0-100
     if cyclomatic_complexity <= 5:
-        return 'SIMPLE'
+        score_cc = 100
     elif cyclomatic_complexity <= 10:
-        return 'MODERATE'
+        score_cc = 60
     else:
-        return 'COMPLEX'
+        score_cc = 20
+
+    # Promedio ponderado: 50% complejidad, 50% PEP8
+    score = (score_cc * 0.5) + (pep8_compliance * 0.5)
+
+    if score >= 70:
+        return 'SIMPLE'
+    elif score >= 40:
+        return 'MEDIA'
+    else:
+        return 'COMPLEJO'
 
 
 def generar_resumen(file_name, metricas, clasificacion):

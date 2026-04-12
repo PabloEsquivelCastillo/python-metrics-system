@@ -4,6 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 from usuarios.views import RegistroView, LoginView, TokenRefreshCustomView
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('api/login/', LoginView.as_view(), name='token_obtain_pair'),
     # Endpoint para refrescar el token (recibe el refresh token, devuelve un nuevo access token)
     path('api/token/refresh/', TokenRefreshCustomView.as_view(), name='token_refresh'),
@@ -19,4 +20,5 @@ urlpatterns = [
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     path('api/analysis/', include('analisis.urls')),
+    path('api/', include('usuarios.urls')),
 ]

@@ -155,7 +155,7 @@ class UploadBatchView(APIView):
             archivo.seek(0) #leer el archivo por completo nuevamente
 
             metricas = analizar_archivo(archivo)
-            clasificacion = calcular_clasificacion(metricas['cyclomatic_complexity'])
+            clasificacion = calcular_clasificacion(metricas['cyclomatic_complexity'], metricas['pep8_compliance'])
             resumen = generar_resumen(archivo.name, metricas, clasificacion)
 
             PythonMetrics.objects.create(

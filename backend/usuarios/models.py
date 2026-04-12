@@ -27,7 +27,7 @@ class MiUsuario(AbstractBaseUser, PermissionsMixin):
     
     email = models.EmailField(unique=True) # Usaremos esto para el login
     nombre_completo = models.CharField(max_length=255)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
+    telefono = models.CharField(max_length=10, blank=True, null=True)
     
     #campo de rol para diferenciar entre admin y cliente
     role = models.CharField(       

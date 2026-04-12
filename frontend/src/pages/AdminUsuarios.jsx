@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { FiEdit2, FiUserCheck, FiUserX } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
+import ApiSpinner from '../components/ApiSpinner'
 
 function AdminUsuarios() {
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [editUser, setEditUser] = useState(null)
     const [editForm, setEditForm] = useState({})
+    const [busyUserId, setBusyUserId] = useState(null)
+    const [savingEdit, setSavingEdit] = useState(false)
 
     const fetchUsers = useCallback(async () => {
         setLoading(true)
@@ -35,11 +38,14 @@ function AdminUsuarios() {
         if (!result.isConfirmed) return
 
         try {
+            setBusyUserId(user.id)
             await api.patch(`/admin/usuarios/${user.id}/`, { is_active: !user.is_active })
+            await fetchUsers()
             Swal.fire({ icon: 'success', title: '¡Listo!', text: `Usuario ${action === 'desactivar' ? 'desactivado' : 'activado'} correctamente.`, timer: 1800, showConfirmButton: false })
-            fetchUsers()
         } catch {
             Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar el usuario.', confirmButtonColor: '#2C89F5' })
+        } finally {
+            setBusyUserId(null)
         }
     }
 
@@ -66,12 +72,15 @@ function AdminUsuarios() {
         })
         if (!result.isConfirmed) return
         try {
+            setSavingEdit(true)
             await api.patch(`/admin/usuarios/${editUser.id}/`, editForm)
+            await fetchUsers()
             Swal.fire({ icon: 'success', title: '¡Actualizado!', text: 'Los datos del usuario fueron guardados.', timer: 1800, showConfirmButton: false })
             setEditUser(null)
-            fetchUsers()
         } catch {
             Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar el usuario.', confirmButtonColor: '#2C89F5' })
+        } finally {
+            setSavingEdit(false)
         }
     }
 
@@ -82,7 +91,7 @@ function AdminUsuarios() {
                 <p className="mb-0" style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Administra los usuarios del sistema</p>
             </div>
 
-            <div className="card p-0 overflow-hidden mt-4">
+            <div className="card p-0 overflow-hidden mt-4" style={{ position: 'relative' }}>
                 <div className="table-responsive">
                     <table className="table table-hover mb-0 align-middle">
                         <thead className="table-light">
@@ -98,7 +107,7 @@ function AdminUsuarios() {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan={6} className="text-center py-5 text-muted">
-                                    <span className="loading-spinner me-2" style={{ borderTopColor: '#2C89F5', borderColor: 'rgba(44,137,245,0.2)' }} /> Cargando...
+                                    <ApiSpinner mode="panel" title="Cargando usuarios" subtitle="Consultando la lista de usuarios registrados." compact />
                                 </td></tr>
                             ) : users.length === 0 ? (
                                 <tr><td colSpan={6} className="text-center py-5 text-muted">No hay usuarios registrados.</td></tr>
@@ -126,12 +135,13 @@ function AdminUsuarios() {
                                     <td>
                                         <div className="d-flex gap-2">
                                             <button className="btn btn-sm" onClick={() => openEdit(u)} title="Editar"
+                                                disabled={busyUserId === u.id}
                                                 style={{ background: 'rgba(44,137,245,0.08)', color: '#2C89F5', borderRadius: 10 }}>
                                                 <FiEdit2 size={15} />
                                             </button>
-                                            <button className="btn btn-sm" title={u.is_active ? 'Desactivar' : 'Activar'} onClick={() => toggleActive(u)}
+                                            <button className="btn btn-sm" title={u.is_active ? 'Desactivar' : 'Activar'} onClick={() => toggleActive(u)} disabled={busyUserId === u.id}
                                                 style={{ background: u.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)', color: u.is_active ? '#dc2626' : '#16a34a', borderRadius: 10 }}>
-                                                {u.is_active ? <FiUserX size={15} /> : <FiUserCheck size={15} />}
+                                                {busyUserId === u.id ? <ApiSpinner mode="inline" title="" /> : (u.is_active ? <FiUserX size={15} /> : <FiUserCheck size={15} />)}
                                             </button>
                                         </div>
                                     </td>
@@ -146,7 +156,15 @@ function AdminUsuarios() {
             {editUser && (
                 <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setEditUser(null)}>
                     <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
-                        <div className="modal-content" style={{ padding: '32px' }}>
+                        <div className="modal-content" style={{ padding: '32px', position: 'relative' }}>
+                            {savingEdit && (
+                                <ApiSpinner
+                                    mode="overlay"
+                                    title="Guardando usuario"
+                                    subtitle="Aplicando los cambios del usuario seleccionado."
+                                    compact
+                                />
+                            )}
                             <h5 className="fw-bold mb-1">Editar usuario</h5>
                             <p className="text-muted mb-4" style={{ fontSize: 14 }}>{editUser.email}</p>
                             <form onSubmit={saveEdit}>
@@ -170,9 +188,11 @@ function AdminUsuarios() {
                                     </select>
                                 </div>
                                 <div className="d-flex justify-content-end gap-2">
-                                    <button type="button" className="btn" onClick={() => setEditUser(null)}
+                                    <button type="button" className="btn" onClick={() => setEditUser(null)} disabled={savingEdit}
                                         style={{ background: '#f5f5f5', color: '#666', borderRadius: 12, fontWeight: 500 }}>Cancelar</button>
-                                    <button type="submit" className="btn btn-primary-custom" style={{ paddingInline: 24 }}>Guardar</button>
+                                    <button type="submit" className="btn btn-primary-custom" disabled={savingEdit} style={{ paddingInline: 24 }}>
+                                        {savingEdit ? <ApiSpinner mode="inline" title="Guardando..." /> : 'Guardar'}
+                                    </button>
                                 </div>
                             </form>
                         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { FiEye, FiSearch, FiX, FiClipboard } from 'react-icons/fi'
 import api from '../api/axios'
+import ApiSpinner from '../components/ApiSpinner'
 
 function AdminBitacora() {
     const [records, setRecords] = useState([])
@@ -43,7 +44,7 @@ function AdminBitacora() {
             </div>
 
             {/* Filtros */}
-            <div className="card mb-4 p-3">
+            <div className="card mb-4 p-3" style={{ position: 'relative' }}>
                 <div className="row g-2 align-items-end">
                     <div className="col-md-2">
                         <label className="form-label small fw-medium">Tabla</label>
@@ -77,13 +78,15 @@ function AdminBitacora() {
                     </div>
                     <div className="col-md-2 d-flex gap-2">
                         <button className="btn btn-sm btn-outline-secondary" onClick={clearFilters} title="Limpiar"><FiX size={16} /></button>
-                        <button className="btn btn-sm" style={{ background: '#2C89F5', color: 'white' }} onClick={fetchRecords}><FiSearch size={16} /> Buscar</button>
+                        <button className="btn btn-sm d-inline-flex align-items-center gap-2" style={{ background: '#2C89F5', color: 'white' }} onClick={fetchRecords} disabled={loading}>
+                            {loading ? <ApiSpinner mode="inline" title="Buscando..." /> : <><FiSearch size={16} /> Buscar</>}
+                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Tabla */}
-            <div className="card p-0 overflow-hidden">
+            <div className="card p-0 overflow-hidden" style={{ position: 'relative' }}>
                 <div className="table-responsive">
                     <table className="table table-hover mb-0 align-middle" style={{ fontSize: 14 }}>
                         <thead className="table-light">
@@ -101,8 +104,7 @@ function AdminBitacora() {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan={8} className="text-center py-5">
-                                    <div className="spinner-border text-primary" role="status" />
-                                    <div className="text-muted mt-2">Cargando registros...</div>
+                                    <ApiSpinner mode="panel" title="Cargando bitácora" subtitle="Consultando el historial de operaciones registradas." compact />
                                 </td></tr>
                             ) : records.length === 0 ? (
                                 <tr><td colSpan={8} className="text-center py-5">

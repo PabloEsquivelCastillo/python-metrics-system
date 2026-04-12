@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createRoot } from 'react-dom/client'
 import { FiUploadCloud } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
 import AnalysisModal from '../components/AnalysisModal'
+import ApiSpinner from '../components/ApiSpinner'
 
 function Dashboard() {
     const [analyses, setAnalyses] = useState([])
@@ -46,6 +48,29 @@ function Dashboard() {
         if (!confirm.isConfirmed) { e.target.value = ''; return }
 
         setUploading(true)
+        const uploadStartAt = Date.now()
+        let spinnerRoot = null
+        Swal.fire({
+            html: '<div id="swal-api-spinner-root"></div>',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: (popup) => {
+                const mountPoint = popup.querySelector('#swal-api-spinner-root')
+                if (!mountPoint) return
+                spinnerRoot = createRoot(mountPoint)
+                spinnerRoot.render(
+                    <ApiSpinner mode="panel" title="Cargando..." subtitle="" compact />
+                )
+            },
+            willClose: () => {
+                if (spinnerRoot) {
+                    spinnerRoot.unmount()
+                    spinnerRoot = null
+                }
+            }
+        })
+
         const formData = new FormData()
         Array.from(files).forEach(f => formData.append('files', f))
 
@@ -53,14 +78,22 @@ function Dashboard() {
             await api.post('/analysis/batch/upload/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
+            await fetchAnalyses()
+            Swal.close()
             Swal.fire({ icon: 'success', title: '¡Análisis completo!', text: `${files.length} archivo(s) procesado(s) correctamente.`, confirmButtonColor: '#2C89F5' })
-            fetchAnalyses()
         } catch (err) {
             const msg = err.response?.data?.details?.files?.[0] || err.response?.data?.message || 'Error al subir archivos.'
+            Swal.close()
             Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#2C89F5' })
+        } finally {
+            const elapsed = Date.now() - uploadStartAt
+            const minVisibleMs = 650
+            if (elapsed < minVisibleMs) {
+                await new Promise(resolve => setTimeout(resolve, minVisibleMs - elapsed))
+            }
+            setUploading(false)
+            e.target.value = ''
         }
-        setUploading(false)
-        e.target.value = ''
     }
 
     const qualityBadge = (q) => {
@@ -100,12 +133,12 @@ function Dashboard() {
                 <label className="btn d-flex align-items-center gap-2"
                     style={{ background: 'white', color: '#2C89F5', fontWeight: 600, cursor: 'pointer', borderRadius: 14, padding: '10px 20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                     <FiUploadCloud size={20} />
-                    {uploading ? <><span className="loading-spinner me-1" style={{ borderTopColor: '#2C89F5', borderColor: 'rgba(44,137,245,0.2)', width: 16, height: 16 }} /> Subiendo...</> : 'Analizar archivos'}
+                    {uploading ? <ApiSpinner mode="inline" title="Analizando..." /> : 'Analizar archivos'}
                     <input type="file" multiple accept=".py" hidden onChange={handleUpload} disabled={uploading} />
                 </label>
             </div>
 
-            <div className="card p-0 overflow-hidden">
+            <div className="card p-0 overflow-hidden" style={{ position: 'relative' }}>
                 <div className="table-responsive">
                     <table className="table table-hover mb-0 align-middle">
                         <thead className="table-light">
@@ -121,7 +154,7 @@ function Dashboard() {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan={6} className="text-center py-5 text-muted">
-                                    <span className="loading-spinner me-2" style={{ borderTopColor: '#2C89F5', borderColor: 'rgba(44,137,245,0.2)' }} /> Cargando...
+                                    <ApiSpinner mode="panel" title="Cargando análisis" subtitle="Estamos consultando los archivos ya procesados." compact />
                                 </td></tr>
                             ) : paginated.length === 0 ? (
                                 <tr><td colSpan={6} className="text-center py-5">

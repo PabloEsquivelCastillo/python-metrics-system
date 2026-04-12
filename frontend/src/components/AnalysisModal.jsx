@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FiX } from 'react-icons/fi'
 import api from '../api/axios'
 import MetricHelpTooltip from './MetricHelpTooltip'
+import ApiSpinner from './ApiSpinner'
 
 const metricHelpTexts = {
     lines_of_code: 'Cantidad total de líneas detectadas en el archivo. Ayuda a estimar tamaño, pero no por sí sola la calidad del código.',
@@ -72,11 +73,13 @@ function AnalysisModal({ analysisId, onClose }) {
     if (loading) return (
         <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
             <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content" style={{ padding: 40 }}>
-                    <div className="text-center">
-                        <span className="loading-spinner me-2" style={{ borderTopColor: '#2C89F5', borderColor: 'rgba(44,137,245,0.2)', width: 28, height: 28 }} />
-                        <p className="text-muted mt-3 mb-0">Cargando análisis...</p>
-                    </div>
+                <div className="modal-content" style={{ padding: 24 }}>
+                    <ApiSpinner
+                        mode="panel"
+                        title="Cargando detalle del análisis"
+                        subtitle="Estamos recuperando el resumen y las métricas del archivo seleccionado."
+                        compact
+                    />
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from .validators import validate_secure_password
 
 User = get_user_model()
 
@@ -15,7 +16,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 # Serializer para el registro de usuarios
 class RegistroSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, validators=[validate_secure_password])
 
     class Meta:
         model = User
@@ -59,7 +60,7 @@ class IsClient(BasePermission):
         )
 # Valida que el usuario autenticado tenga el rol de administrador o cliente
 class IsAdminOrClient(BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view): # type: ignore
         return (
             request.user and
             request.user.is_authenticated and

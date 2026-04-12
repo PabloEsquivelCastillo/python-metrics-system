@@ -44,11 +44,7 @@ function LoginPage() {
     return (
         <div className="d-flex align-items-center justify-content-center px-3" style={{ minHeight: '90vh' }}>
             <div className="card fade-in-up" style={{ width: '100%', maxWidth: '460px', padding: '40px 36px' }}>
-
                 <div className="text-center mb-4">
-                    <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #2C89F5, #1a6dd4)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                        <FiLock size={24} color="white" />
-                    </div>
                     <h1 className="fw-bold mb-1" style={{ fontSize: '1.75rem' }}>Bienvenido</h1>
                     <p className="text-muted mb-0" style={{ fontSize: 14 }}>Inicia sesión para continuar</p>
                 </div>
@@ -83,7 +79,6 @@ function LoginPage() {
                             </button>
                         </div>
                     </div>
-
                     <button type="submit" className="btn btn-primary-custom w-100" disabled={loading}
                         style={{ height: 48, fontSize: '0.95rem' }}>
                         {loading ? <ApiSpinner mode="inline" title="Iniciando..." /> : 'Iniciar sesión'}

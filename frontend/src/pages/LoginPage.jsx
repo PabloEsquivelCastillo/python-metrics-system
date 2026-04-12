@@ -4,6 +4,7 @@ import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
 import { saveTokens, getUser } from '../api/auth'
+import ApiSpinner from '../components/ApiSpinner'
 
 function LoginPage() {
     const navigate = useNavigate()
@@ -80,7 +81,7 @@ function LoginPage() {
                     </div>
                     <button type="submit" className="btn btn-primary-custom w-100" disabled={loading}
                         style={{ height: 48, fontSize: '0.95rem' }}>
-                        {loading ? <><span className="loading-spinner me-2" /> Iniciando...</> : 'Iniciar sesión'}
+                        {loading ? <ApiSpinner mode="inline" title="Iniciando..." /> : 'Iniciar sesión'}
                     </button>
                 </form>
 

@@ -5,6 +5,7 @@ import { FiEye, FiEyeOff, FiUser, FiMail, FiPhone, FiLock, FiUserPlus, FiCheck, 
 import Swal from 'sweetalert2'
 import api from '../api/axios'
 import { validatePassword, getPasswordStrength } from '../utils/passwordValidator'
+import ApiSpinner from '../components/ApiSpinner'
 
 function RegisterPage() {
     const navigate = useNavigate()
@@ -174,7 +175,7 @@ function RegisterPage() {
                     </div>
                     <button type="submit" className="btn btn-primary-custom w-100" disabled={loading}
                         style={{ height: 48, fontSize: '0.95rem' }}>
-                        {loading ? <><span className="loading-spinner me-2" /> Creando...</> : 'Registrarse'}
+                        {loading ? <ApiSpinner mode="inline" title="Creando..." /> : 'Registrarse'}
                     </button>
                 </form>
 

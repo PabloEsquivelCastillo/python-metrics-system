@@ -4,6 +4,7 @@ import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
 import { saveTokens, getUser } from '../api/auth'
+import { encryptPayload } from '../api/encryption'
 import ApiSpinner from '../components/ApiSpinner'
 
 function LoginPage() {
@@ -21,10 +22,11 @@ function LoginPage() {
         setLoading(true)
 
         try {
-            const res = await api.post('/login/', {
+            const encryptedPayload = await encryptPayload({
                 email: form.email,
                 password: form.password,
             })
+            const res = await api.post('/login/', encryptedPayload)
             saveTokens(res.data.access, res.data.refresh)
 
             const user = getUser()

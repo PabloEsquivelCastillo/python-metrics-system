@@ -104,7 +104,30 @@ class UploadBatchView(APIView):
                 getattr(request.user, 'id', None),
             )
             raise ValidationError({'files': ['No se enviaron archivos.']})
+        MAX_FILES = 10
+        if len(files) > MAX_FILES:
+            logger.warning(
+                'Carga rechazada user_id={} motivo=demasiados_archivos total={}',
+                getattr(request.user, 'id', None),
+                len(files),
+            )
+            raise ValidationError({
+                'files': [f'Solo puedes subir máximo {MAX_FILES} archivos.']
+            })
+            
+        MAX_SIZE = 2 * 1024  # bytes
 
+        oversized = [f.name for f in files if f.size > MAX_SIZE]
+        if oversized:
+            logger.warning(
+                'Carga rechazada user_id={} motivo=archivos_grandes archivos={}',
+                getattr(request.user, 'id', None),
+                oversized,
+            )
+            raise ValidationError({
+                'files': [f'Cada archivo debe ser menor o igual a 2 KB. Archivos inválidos: {oversized}']
+            })
+            
         invalid = [f.name for f in files if not f.name.endswith('.py')]
         if invalid:
             logger.warning(

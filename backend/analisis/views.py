@@ -146,11 +146,18 @@ class UploadBatchView(APIView):
 
         #insertar registros en PythonAnalysis
         now = timezone.now()
+        timestamp = (now).strftime('%Y%m%d_%H%M%S')
 
-        registros = [
-            PythonAnalysis(
+        registros = []
+        for file in files:
+            if '.' in file.name:
+                base, ext = file.name.rsplit('.', 1)
+                versioned_name = f"{base}_{timestamp}.{ext}"
+            else:
+                versioned_name = f"{file.name}_{timestamp}"
+            registros.append(PythonAnalysis(
                 batch = batch,
-                file_name = file.name,
+                file_name = versioned_name,
                 file_size_kb = round(file.size / 1024, 2),
                 analysis_status = 'PROCESSING',
                 analysis_date = now,
@@ -158,9 +165,7 @@ class UploadBatchView(APIView):
                 created_by = request.user.email,
                 updated_at = now,
                 updated_by = request.user.email,
-            )
-            for file in files
-        ]
+            ))
 
         PythonAnalysis.objects.bulk_create(registros)
 

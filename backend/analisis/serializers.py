@@ -3,13 +3,38 @@ from django.utils import timezone
 from .models import UploadBatch, PythonAnalysis, PythonMetrics
 
 
+class UploadBatchInfoSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        analysis = self.context.get('analysis')
+        if obj.status == 'PROCESSING' and analysis and analysis.analysis_status:
+            return analysis.analysis_status
+        return obj.status
+
+    class Meta:
+        model = UploadBatch
+        fields = [
+            'batch_id',
+            'total_files',
+            'upload_date',
+            'status',
+        ]
+
+
 
 
 class PythonAnalysisListSerializer(serializers.ModelSerializer):
+    batch = serializers.SerializerMethodField()
+
+    def get_batch(self, obj):
+        return UploadBatchInfoSerializer(obj.batch, context={'analysis': obj}).data
+
     class Meta:
         model  = PythonAnalysis
         fields = [
             'analysis_id',
+            'batch',
             'file_name',
             'file_size_kb',
             'quality_classification',
@@ -33,11 +58,16 @@ class PythonMetricsSerializer(serializers.ModelSerializer):
         
 class AnalysisDetailSerializer(serializers.ModelSerializer):
     metrics = PythonMetricsSerializer(source='pythonmetrics_set', many=True)
+    batch = serializers.SerializerMethodField()
+
+    def get_batch(self, obj):
+        return UploadBatchInfoSerializer(obj.batch, context={'analysis': obj}).data
     
     class Meta:
         model = PythonAnalysis
         fields = [
             'analysis_id',
+            'batch',
             'file_name',
             'file_size_kb',
             'quality_classification',

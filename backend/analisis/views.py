@@ -37,7 +37,7 @@ class PythonAnalysisListView(generics.ListAPIView):
         return response
 
     def get_queryset(self): # type: ignore
-        return PythonAnalysis.objects.filter(
+        return PythonAnalysis.objects.select_related('batch').filter(
             batch__user=self.request.user
         ).order_by('-analysis_date')
         
@@ -60,7 +60,7 @@ class AnalysisDetailView(generics.RetrieveAPIView):
         return response
     
     def get_queryset(self): # type: ignore
-        return PythonAnalysis.objects.filter(
+        return PythonAnalysis.objects.select_related('batch').filter(
             batch__user=self.request.user
         )
 
@@ -204,6 +204,11 @@ class UploadBatchView(APIView):
             analysis_obj.updated_at = now
             analysis_obj.updated_by = request.user.email
             analysis_obj.save()
+
+        batch.status = 'COMPLETED'
+        batch.updated_at = now
+        batch.updated_by = request.user.email
+        batch.save(update_fields=['status', 'updated_at', 'updated_by'])
 
 
         response = Response(

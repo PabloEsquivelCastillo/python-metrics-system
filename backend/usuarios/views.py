@@ -1,34 +1,71 @@
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from loguru import logger
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import RegistroSerializer, CustomTokenObtainPairSerializer, PerfilSerializer, AdminUsuarioSerializer, IsAdmin
+from .rsa_utils import get_public_key_pem, decrypt_rsa_base64
 
-# Obtenemos tu modelo personalizado
+
 User = get_user_model()
 
+
+class PublicKeyView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request, *args, **kwargs):
+        return Response({'public_key': get_public_key_pem()})
+
+
+def decrypt_auth_payload(payload):
+    if not payload or not payload.get('encrypted'):
+        return payload
+
+    sensitive_fields = ('email', 'password', 'nombre_completo', 'telefono')
+    decrypted = {}
+
+    for key, value in payload.items():
+        if key == 'encrypted':
+            continue
+
+        if key in sensitive_fields and value is not None:
+            try:
+                decrypted[key] = decrypt_rsa_base64(value)
+            except Exception as exc:
+                raise ValidationError({key: 'No se pudo descifrar el campo.'}) from exc
+        else:
+            decrypted[key] = value
+
+    if not decrypted:
+        raise ValidationError({'detail': 'Payload cifrado inválido.'})
+    return decrypted
+
 class RegistroView(generics.CreateAPIView):
-    # Le indicamos qué modelo va a consultar/crear
     queryset = User.objects.all()
     
-    # IMPORTANTE: Permitimos que usuarios no autenticados puedan acceder a esta ruta
+
     permission_classes = (AllowAny,)
     
-    # Le indicamos qué serializador debe usar para validar y guardar los datos
+
     serializer_class = RegistroSerializer
 
     def create(self, request, *args, **kwargs):
+        payload = decrypt_auth_payload(request.data)
         logger.debug(
             'Registro solicitado email={}',
-            request.data.get('email'),
+            payload.get('email'),
         )
-        response = super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        response = Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         logger.info(
             'Registro completado status={} email={}',
             response.status_code,
-            request.data.get('email'),
+            payload.get('email'),
         )
         return response
 
@@ -39,13 +76,14 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer 
 
     def post(self, request, *args, **kwargs):
+        payload = decrypt_auth_payload(request.data)
         logger.debug(
             'Login solicitado username={} email={}',
-            request.data.get('username'),
-            request.data.get('email'),
+            payload.get('username'),
+            payload.get('email'),
         )
-        # Verificar si la cuenta existe pero está desactivada
-        email = request.data.get('email')
+
+        email = payload.get('email')
         if email:
             try:
                 user = User.objects.get(email=email)
@@ -59,19 +97,21 @@ class LoginView(TokenObtainPairView):
                 pass
 
         try:
-            response = super().post(request, *args, **kwargs)
+            serializer = self.get_serializer(data=payload)
+            serializer.is_valid(raise_exception=True)
+            response = Response(serializer.validated_data, status=status.HTTP_200_OK)
             logger.info(
                 'Login completado status={} username={} email={}',
                 response.status_code,
-                request.data.get('username'),
-                request.data.get('email'),
+                payload.get('username'),
+                payload.get('email'),
             )
             return response
         except Exception as exc:
             logger.error(
                 'Login fallido username={} email={} detalle={}',
-                request.data.get('username'),
-                request.data.get('email'),
+                payload.get('username'),
+                payload.get('email'),
                 str(exc),
             )
             raise

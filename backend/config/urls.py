@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-from usuarios.views import RegistroView, LoginView, TokenRefreshCustomView
+from usuarios.views import RegistroView, LoginView, TokenRefreshCustomView, PublicKeyView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login/', LoginView.as_view(), name='token_obtain_pair'),
+    path('api/public-key/', PublicKeyView.as_view(), name='public-key'),
     # Endpoint para refrescar el token (recibe el refresh token, devuelve un nuevo access token)
     path('api/token/refresh/', TokenRefreshCustomView.as_view(), name='token_refresh'),
     path('api/registro/', RegistroView.as_view(), name='registro'),

@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { FiEye, FiEyeOff, FiUser, FiMail, FiPhone, FiLock, FiUserPlus, FiCheck, FiX } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import api from '../api/axios'
+import { encryptPayload } from '../api/encryption'
 import { validatePassword, getPasswordStrength } from '../utils/passwordValidator'
 import ApiSpinner from '../components/ApiSpinner'
 
@@ -52,12 +53,13 @@ function RegisterPage() {
         setLoading(true)
 
         try {
-            await api.post('/registro/', {
+            const encryptedPayload = await encryptPayload({
                 email: form.email,
                 nombre_completo: form.nombre_completo,
                 password: form.password,
                 telefono: form.telefono || undefined,
             })
+            await api.post('/registro/', encryptedPayload)
             Swal.fire({ icon: 'success', title: '¡Cuenta creada!', text: 'Ya puedes iniciar sesión.', confirmButtonColor: '#2C89F5' })
             navigate('/login')
         } catch (err) {

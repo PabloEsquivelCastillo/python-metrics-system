@@ -145,7 +145,7 @@ class UploadBatchView(APIView):
 
 
         #insertar registros en PythonAnalysis
-        now = timezone.now()
+        now = timezone.localtime(timezone.now())
         timestamp = (now).strftime('%Y%m%d_%H%M%S')
 
         registros = []

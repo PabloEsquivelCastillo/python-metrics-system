@@ -100,7 +100,7 @@ class UploadBatchSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        now  = timezone.now()
+        now = timezone.localtime(timezone.now())
 
         return UploadBatch.objects.create(
             user        = user,

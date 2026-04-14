@@ -258,6 +258,75 @@ h1 {
   animation: spin 0.8s linear infinite;
 }
 
+.error-state-wrapper {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.error-state-card {
+  width: min(560px, 100%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 16px 34px rgba(2, 27, 121, 0.16);
+}
+
+.error-state-icon-wrap {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #eef5ff;
+  border: 1px solid #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-state-icon {
+  font-size: 1.7rem;
+  color: #2c89f5;
+}
+
+.error-state-code {
+  display: inline-block;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #1a6dd4;
+}
+
+.error-state-title {
+  margin-top: 12px;
+  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.error-state-description {
+  margin: 0 auto;
+  max-width: 520px;
+  color: #475569;
+}
+
+.error-state-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.error-state-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-width: 148px;
+  padding: 10px 18px;
+}
+
 .api-spinner-inline__icon {
   position: relative;
   font-size: 10px;

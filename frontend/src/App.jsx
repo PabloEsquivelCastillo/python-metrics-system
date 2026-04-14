@@ -1,6 +1,7 @@
 import { BrowserRouter } from 'react-router-dom'
 import AppRouter from './routes/AppRouter'
 import Navbar from './components/Navbar'
+import './App.css'
 
 function App() {
   return (

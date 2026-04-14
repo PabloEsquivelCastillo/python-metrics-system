@@ -20,8 +20,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const statusCode = error.response?.status;
+
+    if (statusCode >= 500) {
+      window.location.href = '/error/500';
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (statusCode === 401 && !originalRequest._retry) {
       // No interceptar 401 en login o registro
       const url = originalRequest.url || '';
       if (url.includes('/login') || url.includes('/registro')) {

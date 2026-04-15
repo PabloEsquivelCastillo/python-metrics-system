@@ -10,14 +10,34 @@ import tempfile
 def validar_archivo_python(file):
     try:
         contenido = file.read().decode('utf-8')
+
         ast.parse(contenido, filename=getattr(file, 'name', '<archivo>'))
+
+        # Validación contenido peligroso
+        palabras_peligrosas = [
+            'os.system',
+            'subprocess',
+            'eval(',
+            'exec(',
+            '__import__',
+            'rm ',
+        ]
+
+        for palabra in palabras_peligrosas:
+            if palabra in contenido:
+                return False, f'Contenido no permitido: {palabra}'
+
         return True, None
+
     except UnicodeDecodeError:
         return False, 'El archivo no es texto Python valido en UTF-8.'
+
     except SyntaxError:
         return False, 'El contenido no corresponde a un archivo Python valido.'
+
     finally:
         file.seek(0)
+
 
 
 

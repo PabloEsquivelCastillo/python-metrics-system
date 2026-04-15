@@ -153,7 +153,7 @@ class UploadBatchView(APIView):
             )
             raise ValidationError({
                 'files': [
-                    'Uno o mas archivos no contienen codigo Python valido. ' + ' | '.join(invalid_content)
+                    'Uno o mas archivos fueron rechazados por seguridad: ' + ' | '.join(invalid_content)
                 ]
             })
 

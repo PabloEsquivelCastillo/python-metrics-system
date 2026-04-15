@@ -84,6 +84,72 @@ function AdminUsuarios() {
         }
     }
 
+    const handleEditOverlayKeyDown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setEditUser(null)
+        }
+    }
+
+    const getToggleIcon = (user) => {
+        if (busyUserId === user.id) {
+            return <ApiSpinner mode="inline" title="" />
+        }
+        if (user.is_active) {
+            return <FiUserX size={15} />
+        }
+        return <FiUserCheck size={15} />
+    }
+
+    let tableRows = users.map(u => (
+        <tr key={u.id} style={{ opacity: u.is_active ? 1 : 0.45 }}>
+            <td style={{ paddingLeft: 24, fontWeight: 500 }}>{u.email}</td>
+            <td>{u.nombre_completo}</td>
+            <td className="d-none d-md-table-cell">{u.telefono || '—'}</td>
+            <td>
+                <span className="badge" style={{
+                    background: u.role === 'admin' ? 'rgba(44,137,245,0.12)' : 'rgba(107,114,128,0.1)',
+                    color: u.role === 'admin' ? '#2C89F5' : '#6b7280'
+                }}>
+                    {u.role === 'admin' ? 'Admin' : 'Cliente'}
+                </span>
+            </td>
+            <td>
+                <span className="badge" style={{
+                    background: u.is_active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.1)',
+                    color: u.is_active ? '#16a34a' : '#dc2626'
+                }}>
+                    {u.is_active ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+            <td>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-sm" onClick={() => openEdit(u)} title="Editar"
+                        disabled={busyUserId === u.id}
+                        style={{ background: 'rgba(44,137,245,0.08)', color: '#2C89F5', borderRadius: 10 }}>
+                        <FiEdit2 size={15} />
+                    </button>
+                    <button className="btn btn-sm" title={u.is_active ? 'Desactivar' : 'Activar'} onClick={() => toggleActive(u)} disabled={busyUserId === u.id}
+                        style={{ background: u.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)', color: u.is_active ? '#dc2626' : '#16a34a', borderRadius: 10 }}>
+                        {getToggleIcon(u)}
+                    </button>
+                </div>
+            </td>
+        </tr>
+    ))
+
+    if (loading) {
+        tableRows = [
+            <tr key="loading"><td colSpan={6} className="text-center py-5 text-muted">
+                <ApiSpinner mode="panel" title="Cargando usuarios" subtitle="Consultando la lista de usuarios registrados." compact />
+            </td></tr>
+        ]
+    } else if (users.length === 0) {
+        tableRows = [
+            <tr key="empty"><td colSpan={6} className="text-center py-5 text-muted">No hay usuarios registrados.</td></tr>
+        ]
+    }
+
     return (
         <div className="container-fluid px-4 py-4 fade-in-up">
             <div className="mb-4">
@@ -104,58 +170,27 @@ function AdminUsuarios() {
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={6} className="text-center py-5 text-muted">
-                                    <ApiSpinner mode="panel" title="Cargando usuarios" subtitle="Consultando la lista de usuarios registrados." compact />
-                                </td></tr>
-                            ) : users.length === 0 ? (
-                                <tr><td colSpan={6} className="text-center py-5 text-muted">No hay usuarios registrados.</td></tr>
-                            ) : users.map(u => (
-                                <tr key={u.id} style={{ opacity: u.is_active ? 1 : 0.45 }}>
-                                    <td style={{ paddingLeft: 24, fontWeight: 500 }}>{u.email}</td>
-                                    <td>{u.nombre_completo}</td>
-                                    <td className="d-none d-md-table-cell">{u.telefono || '—'}</td>
-                                    <td>
-                                        <span className="badge" style={{
-                                            background: u.role === 'admin' ? 'rgba(44,137,245,0.12)' : 'rgba(107,114,128,0.1)',
-                                            color: u.role === 'admin' ? '#2C89F5' : '#6b7280'
-                                        }}>
-                                            {u.role === 'admin' ? 'Admin' : 'Cliente'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className="badge" style={{
-                                            background: u.is_active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.1)',
-                                            color: u.is_active ? '#16a34a' : '#dc2626'
-                                        }}>
-                                            {u.is_active ? 'Activo' : 'Inactivo'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="d-flex gap-2">
-                                            <button className="btn btn-sm" onClick={() => openEdit(u)} title="Editar"
-                                                disabled={busyUserId === u.id}
-                                                style={{ background: 'rgba(44,137,245,0.08)', color: '#2C89F5', borderRadius: 10 }}>
-                                                <FiEdit2 size={15} />
-                                            </button>
-                                            <button className="btn btn-sm" title={u.is_active ? 'Desactivar' : 'Activar'} onClick={() => toggleActive(u)} disabled={busyUserId === u.id}
-                                                style={{ background: u.is_active ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)', color: u.is_active ? '#dc2626' : '#16a34a', borderRadius: 10 }}>
-                                                {busyUserId === u.id ? <ApiSpinner mode="inline" title="" /> : (u.is_active ? <FiUserX size={15} /> : <FiUserCheck size={15} />)}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                        <tbody>{tableRows}</tbody>
                     </table>
                 </div>
             </div>
 
             {/* Modal editar */}
             {editUser && (
-                <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setEditUser(null)}>
-                    <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
+                <div
+                    className="modal d-block"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Cerrar edición de usuario"
+                    onClick={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setEditUser(null)
+                        }
+                    }}
+                    onKeyDown={handleEditOverlayKeyDown}
+                >
+                    <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content" style={{ padding: '32px', position: 'relative' }}>
                             {savingEdit && (
                                 <ApiSpinner
@@ -169,14 +204,14 @@ function AdminUsuarios() {
                             <p className="text-muted mb-4" style={{ fontSize: 14 }}>{editUser.email}</p>
                             <form onSubmit={saveEdit}>
                                 <div className="mb-3">
-                                    <label className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
-                                    <input type="text" className="form-control" value={editForm.nombre_completo}
+                                    <label htmlFor="admin-edit-fullname" className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
+                                    <input id="admin-edit-fullname" type="text" className="form-control" value={editForm.nombre_completo}
                                         onChange={e => setEditForm({ ...editForm, nombre_completo: e.target.value })} required style={{ height: 44 }} />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
-                                    <input type="tel" className="form-control" value={editForm.telefono} maxLength={10} inputMode="numeric"
-                                        onChange={e => setEditForm({ ...editForm, telefono: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                    <label htmlFor="admin-edit-phone" className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
+                                    <input id="admin-edit-phone" type="tel" className="form-control" value={editForm.telefono} maxLength={10} inputMode="numeric"
+                                        onChange={e => setEditForm({ ...editForm, telefono: e.target.value.replaceAll(/\D/g, '').slice(0, 10) })}
                                         placeholder="10 dígitos" style={{ height: 44 }} />
                                 </div>
                                 <div className="mb-4">

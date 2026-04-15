@@ -4,11 +4,11 @@ export const validatePassword = (password) => {
         hasUppercase: /[A-Z]/.test(password),
         hasLowercase: /[a-z]/.test(password),
         hasNumber: /\d/.test(password),
-        hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+        hasSpecialChar: /[!@#$%^&*()_+=\-\[\]{};':"\\|,.<>/?]/.test(password),
     }
 
     return {
-        isValid: Object.values(requirements).every(req => req),
+        isValid: Object.values(requirements).every(Boolean),
         requirements,
     }
 }

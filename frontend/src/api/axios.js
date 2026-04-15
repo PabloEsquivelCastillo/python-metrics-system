@@ -23,8 +23,8 @@ api.interceptors.response.use(
     const statusCode = error.response?.status;
 
     if (statusCode >= 500) {
-      window.location.href = '/error/500';
-      return Promise.reject(error);
+      globalThis.location.href = '/error/500';
+      throw error;
     }
 
     const originalRequest = error.config;
@@ -32,7 +32,7 @@ api.interceptors.response.use(
       // No interceptar 401 en login o registro
       const url = originalRequest.url || '';
       if (url.includes('/login') || url.includes('/registro')) {
-        return Promise.reject(error);
+        throw error;
       }
 
       originalRequest._retry = true;
@@ -45,14 +45,14 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch {
           localStorage.clear();
-          window.location.href = '/login';
+          globalThis.location.href = '/login';
         }
       } else {
         localStorage.clear();
-        window.location.href = '/login';
+        globalThis.location.href = '/login';
       }
     }
-    return Promise.reject(error);
+    throw error;
   }
 );
 

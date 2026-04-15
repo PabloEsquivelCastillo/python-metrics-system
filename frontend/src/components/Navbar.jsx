@@ -12,6 +12,8 @@ function Navbar() {
     const admin = isAdmin()
     const user = getUser()
     const [menuOpen, setMenuOpen] = useState(false)
+    const homePath = !auth ? '/login' : (admin ? '/admin/usuarios' : '/dashboard')
+    const showDesktopLeftBorder = globalThis.innerWidth >= 768
 
     const logout = async () => {
         const result = await Swal.fire({
@@ -40,7 +42,7 @@ function Navbar() {
         }}>
             <div className="container-fluid px-4 d-flex align-items-center justify-content-between flex-wrap">
                 <div className="d-flex align-items-center justify-content-between w-100 d-md-none">
-                    <Link to={auth ? (admin ? '/admin/usuarios' : '/dashboard') : '/login'}
+                    <Link to={homePath}
                         className="navbar-brand mb-0 fw-bold" style={{ color: '#2C89F5', fontSize: 20, textDecoration: 'none' }}>
                         Python Analyzer
                     </Link>
@@ -52,7 +54,7 @@ function Navbar() {
                     )}
                 </div>
 
-                <Link to={auth ? (admin ? '/admin/usuarios' : '/dashboard') : '/login'}
+                <Link to={homePath}
                     className="navbar-brand mb-0 fw-bold d-none d-md-block" style={{ color: '#2C89F5', fontSize: 22, textDecoration: 'none' }}>
                     Python Analyzer
                 </Link>
@@ -71,7 +73,7 @@ function Navbar() {
                             <FiUser size={15} className="me-1" />Perfil
                         </Link>
 
-                        <div className="d-flex align-items-center gap-2 ms-md-2 ps-md-3" style={{ borderLeft: window.innerWidth >= 768 ? '1px solid #eee' : 'none' }}>
+                        <div className="d-flex align-items-center gap-2 ms-md-2 ps-md-3" style={{ borderLeft: showDesktopLeftBorder ? '1px solid #eee' : 'none' }}>
                             <span style={{ fontSize: 13, color: '#888', fontWeight: 500 }}>{user?.nombre_completo || user?.email}</span>
                             <button className="btn btn-sm d-flex align-items-center gap-1" onClick={logout}
                                 style={{ background: '#f5f5f5', color: '#666', borderRadius: 10, fontSize: 13, fontWeight: 500 }}>

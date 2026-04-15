@@ -13,11 +13,11 @@ class UploadBatch(models.Model):
     user = models.ForeignKey('usuarios.MiUsuario', models.DO_NOTHING)
     total_files = models.IntegerField(blank=True, null=True)
     upload_date = models.DateTimeField(blank=True, null=True)
-    status = models.CharField(max_length=10, blank=True, null=True)
+    status = models.CharField(max_length=10, blank=True)
     created_at = models.DateTimeField(blank=True, null=True)
-    created_by = models.CharField(max_length=150, blank=True, null=True)
+    created_by = models.CharField(max_length=150, blank=True)
     updated_at = models.DateTimeField(blank=True, null=True)
-    updated_by = models.CharField(max_length=150, blank=True, null=True)
+    updated_by = models.CharField(max_length=150, blank=True)
 
     class Meta:
         managed = True

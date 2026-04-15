@@ -17,11 +17,38 @@ function RegisterPage() {
     const handleChange = (e) => {
         const { name, value } = e.target
         if (name === 'telefono') {
-            const cleaned = value.replace(/\D/g, '').slice(0, 10)
+            const cleaned = value.replaceAll(/\D/g, '').slice(0, 10)
             setForm({ ...form, telefono: cleaned })
         } else {
             setForm({ ...form, [name]: value })
         }
+    }
+
+    const getMissingPasswordRequirements = (requirements) => {
+        const missing = []
+        if (!requirements.minLength) missing.push('12 caracteres mínimo')
+        if (!requirements.hasUppercase) missing.push('una mayúscula')
+        if (!requirements.hasLowercase) missing.push('una minúscula')
+        if (!requirements.hasNumber) missing.push('un número')
+        if (!requirements.hasSpecialChar) missing.push('un carácter especial')
+        return missing
+    }
+
+    const showPasswordValidationAlert = (missing) => {
+        const requirementsHtml = missing.map((item) => `• ${item}`).join('<br/>')
+        Swal.fire({
+            icon: 'warning',
+            title: 'Contraseña no cumple requisitos',
+            html: `<div style="text-align: left;">La contraseña debe tener:<br/><br/>${requirementsHtml}</div>`,
+            confirmButtonColor: '#2C89F5'
+        })
+    }
+
+    const resolveErrorMessage = (data) => {
+        if (data?.details) {
+            return Object.values(data.details).flat().join(' ')
+        }
+        return data?.message || 'No se pudo crear la cuenta.'
     }
 
     const handleSubmit = async (e) => {
@@ -34,19 +61,8 @@ function RegisterPage() {
 
         const passwordValidation = validatePassword(form.password)
         if (!passwordValidation.isValid) {
-            const missing = []
-            if (!passwordValidation.requirements.minLength) missing.push('12 caracteres mínimo')
-            if (!passwordValidation.requirements.hasUppercase) missing.push('una mayúscula')
-            if (!passwordValidation.requirements.hasLowercase) missing.push('una minúscula')
-            if (!passwordValidation.requirements.hasNumber) missing.push('un número')
-            if (!passwordValidation.requirements.hasSpecialChar) missing.push('un carácter especial')
-            
-            Swal.fire({
-                icon: 'warning',
-                title: 'Contraseña no cumple requisitos',
-                html: `<div style="text-align: left;">La contraseña debe tener:<br/><br/>${missing.map(m => `• ${m}`).join('<br/>')}`,
-                confirmButtonColor: '#2C89F5'
-            })
+            const missing = getMissingPasswordRequirements(passwordValidation.requirements)
+            showPasswordValidationAlert(missing)
             return
         }
 
@@ -64,12 +80,7 @@ function RegisterPage() {
             navigate('/login')
         } catch (err) {
             const data = err.response?.data
-            let msg = 'No se pudo crear la cuenta.'
-            if (data?.details) {
-                msg = Object.values(data.details).flat().join(' ')
-            } else if (data?.message) {
-                msg = data.message
-            }
+            const msg = resolveErrorMessage(data)
             Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#2C89F5' })
         } finally {
             setLoading(false)
@@ -90,28 +101,28 @@ function RegisterPage() {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
+                        <label htmlFor="register-fullname" className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
                         <div style={{ position: 'relative' }}>
                             <FiUser size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type="text" name="nombre_completo" className="form-control"
+                            <input id="register-fullname" type="text" name="nombre_completo" className="form-control"
                                 placeholder="Tu nombre completo" value={form.nombre_completo}
                                 onChange={handleChange} required style={{ height: 48, paddingLeft: 42 }} />
                         </div>
                     </div>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
+                        <label htmlFor="register-email" className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
                         <div style={{ position: 'relative' }}>
                             <FiMail size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type="email" name="email" className="form-control"
+                            <input id="register-email" type="email" name="email" className="form-control"
                                 placeholder="tu@correo.com" value={form.email}
                                 onChange={handleChange} required style={{ height: 48, paddingLeft: 42 }} />
                         </div>
                     </div>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
+                        <label htmlFor="register-phone" className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
                         <div style={{ position: 'relative' }}>
                             <FiPhone size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type="tel" name="telefono" className="form-control"
+                            <input id="register-phone" type="tel" name="telefono" className="form-control"
                                 placeholder="10 dígitos" value={form.telefono}
                                 onChange={handleChange} maxLength={10} inputMode="numeric"
                                 style={{ height: 48, paddingLeft: 42 }} />
@@ -121,10 +132,10 @@ function RegisterPage() {
                         )}
                     </div>
                     <div className="mb-4">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Contraseña</label>
+                        <label htmlFor="register-password" className="form-label fw-medium" style={{ fontSize: 14 }}>Contraseña</label>
                         <div style={{ position: 'relative' }}>
                             <FiLock size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type={showPass ? 'text' : 'password'} name="password" className="form-control"
+                            <input id="register-password" type={showPass ? 'text' : 'password'} name="password" className="form-control"
                                 placeholder="Min. 12 caracteres, mayús, minús, número, símbolo" value={form.password}
                                 onChange={handleChange} required minLength={12}
                                 style={{ height: 48, paddingLeft: 42, paddingRight: 45 }} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import { FiX } from 'react-icons/fi'
 import api from '../api/axios'
 import MetricHelpTooltip from './MetricHelpTooltip'
@@ -48,6 +49,26 @@ function buildSummarySections(summary) {
     }
 }
 
+function MetricCard({ value, label, helpText }) {
+    return (
+        <div className="col-4 mb-3">
+            <div style={{ background: '#f8f9fa', borderRadius: 14, padding: '16px 8px' }}>
+                <h4 className="fw-bold mb-0" style={{ color: '#1a1a2e' }}>{value ?? '—'}</h4>
+                <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 28 }}>
+                    <small className="text-muted" style={{ fontSize: 11 }}>{label}</small>
+                    <MetricHelpTooltip text={helpText} />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+MetricCard.propTypes = {
+    value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    label: PropTypes.string.isRequired,
+    helpText: PropTypes.string.isRequired,
+}
+
 function AnalysisModal({ analysisId, onClose }) {
     const [data, setData] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -91,21 +112,28 @@ function AnalysisModal({ analysisId, onClose }) {
     const qc = qualityConfig[data.quality_classification] || { bg: '#f0f0f0', color: '#999', label: data.quality_classification }
     const summarySections = buildSummarySections(data.analysis_summary)
 
-    const MetricCard = ({ value, label, helpText }) => (
-        <div className="col-4 mb-3">
-            <div style={{ background: '#f8f9fa', borderRadius: 14, padding: '16px 8px' }}>
-                <h4 className="fw-bold mb-0" style={{ color: '#1a1a2e' }}>{value ?? '—'}</h4>
-                <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 28 }}>
-                    <small className="text-muted" style={{ fontSize: 11 }}>{label}</small>
-                    <MetricHelpTooltip text={helpText} />
-                </div>
-            </div>
-        </div>
-    )
+    const handleOverlayKeyDown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onClose()
+        }
+    }
 
     return (
-        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+        <div
+            className="modal d-block"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+            role="button"
+            tabIndex={0}
+            aria-label="Cerrar modal"
+            onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                    onClose()
+                }
+            }}
+            onKeyDown={handleOverlayKeyDown}
+        >
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 580 }}>
                 <div className="modal-content" style={{ padding: '32px' }}>
                     <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
@@ -204,6 +232,11 @@ function AnalysisModal({ analysisId, onClose }) {
             </div>
         </div>
     )
+}
+
+AnalysisModal.propTypes = {
+    analysisId: PropTypes.number.isRequired,
+    onClose: PropTypes.func.isRequired,
 }
 
 export default AnalysisModal

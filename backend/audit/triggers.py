@@ -214,7 +214,7 @@ END;
 """
 
 
-def deploy_triggers(apps, schema_editor):
+def deploy_triggers(_apps, schema_editor):
     """Crea todos los triggers (eliminando los anteriores primero)."""
     if hasattr(schema_editor, 'cursor'):
         cursor = schema_editor.cursor()
@@ -236,7 +236,7 @@ def deploy_triggers(apps, schema_editor):
         cursor.execute(_build_audit_before_update(table_name))
 
 
-def rollback_triggers(apps, schema_editor):
+def rollback_triggers(_apps, schema_editor):
     """Elimina todos los triggers."""
     if hasattr(schema_editor, 'cursor'):
         cursor = schema_editor.cursor()

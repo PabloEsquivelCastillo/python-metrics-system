@@ -59,7 +59,9 @@ h1 {
 }
 
 .btn-primary-custom:disabled {
-  opacity: 0.7;
+  opacity: 1;
+  background: #64748b;
+  color: #ffffff;
   cursor: not-allowed;
   transform: none;
 }

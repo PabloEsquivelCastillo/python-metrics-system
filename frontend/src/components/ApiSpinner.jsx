@@ -1,4 +1,5 @@
 import { FaPython } from 'react-icons/fa'
+import PropTypes from 'prop-types'
 
 function ApiSpinner({
     title = 'Cargando...',
@@ -20,7 +21,7 @@ function ApiSpinner({
     }
 
     return (
-        <div className={`api-spinner-shell api-spinner-shell--${mode}`} role="status" aria-live="polite">
+        <div className={`api-spinner-shell api-spinner-shell--${mode}`} aria-live="polite">
             <div className={`api-spinner-card ${compact ? 'api-spinner-card--compact' : ''}`}>
                 <div className="api-spinner-visual" aria-hidden="true">
                     <span className="api-spinner-ring api-spinner-ring--outer" />
@@ -29,12 +30,20 @@ function ApiSpinner({
                     <FaPython className={`api-spinner-icon ${light ? 'api-spinner-icon--light' : ''}`} size={compact ? 24 : 32} />
                 </div>
                 <div className="api-spinner-copy">
-                    <div className={`api-spinner-title ${light ? 'api-spinner-title--light' : ''}`}>{title}</div>
+                    <output className={`api-spinner-title ${light ? 'api-spinner-title--light' : ''}`}>{title}</output>
                     {subtitle && <div className={`api-spinner-subtitle ${light ? 'api-spinner-subtitle--light' : ''}`}>{subtitle}</div>}
                 </div>
             </div>
         </div>
     )
+}
+
+ApiSpinner.propTypes = {
+    title: PropTypes.string,
+    subtitle: PropTypes.string,
+    mode: PropTypes.oneOf(['inline', 'panel', 'overlay', 'fullscreen']),
+    light: PropTypes.bool,
+    compact: PropTypes.bool,
 }
 
 export default ApiSpinner

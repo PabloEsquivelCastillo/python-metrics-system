@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { FiInfo } from 'react-icons/fi'
+import PropTypes from 'prop-types'
 
 function MetricHelpTooltip({ text }) {
     const [visible, setVisible] = useState(false)
 
     return (
-        <span
-            style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
-            onMouseEnter={() => setVisible(true)}
-            onMouseLeave={() => setVisible(false)}
-        >
+        <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
             <button
                 type="button"
                 aria-label="Mostrar ayuda"
+                onMouseEnter={() => setVisible(true)}
+                onMouseLeave={() => setVisible(false)}
                 onFocus={() => setVisible(true)}
                 onBlur={() => setVisible(false)}
                 style={{
@@ -55,6 +54,10 @@ function MetricHelpTooltip({ text }) {
             )}
         </span>
     )
+}
+
+MetricHelpTooltip.propTypes = {
+    text: PropTypes.string.isRequired,
 }
 
 export default MetricHelpTooltip

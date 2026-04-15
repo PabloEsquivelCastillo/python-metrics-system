@@ -21,7 +21,7 @@ function ProfilePage() {
     }, [])
 
     const handlePhoneChange = (e) => {
-        const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10)
+        const cleaned = e.target.value.replaceAll(/\D/g, '').slice(0, 10)
         setForm({ ...form, telefono: cleaned })
     }
 
@@ -80,28 +80,28 @@ function ProfilePage() {
                 )}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
+                        <label htmlFor="profile-email" className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
                         <div style={{ position: 'relative' }}>
                             <FiMail size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#ccc' }} />
-                            <input type="email" className="form-control" value={form.email} disabled
+                            <input id="profile-email" type="email" className="form-control" value={form.email} disabled
                                 style={{ height: 48, paddingLeft: 42, background: '#f9f9f9', color: '#999' }} />
                         </div>
                         <small className="text-muted" style={{ fontSize: 12 }}>El correo no se puede modificar.</small>
                     </div>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
+                        <label htmlFor="profile-fullname" className="form-label fw-medium" style={{ fontSize: 14 }}>Nombre completo</label>
                         <div style={{ position: 'relative' }}>
                             <FiUser size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type="text" className="form-control" value={form.nombre_completo}
+                            <input id="profile-fullname" type="text" className="form-control" value={form.nombre_completo}
                                 onChange={e => setForm({ ...form, nombre_completo: e.target.value })}
                                 required style={{ height: 48, paddingLeft: 42 }} />
                         </div>
                     </div>
                     <div className="mb-4">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
+                        <label htmlFor="profile-phone" className="form-label fw-medium" style={{ fontSize: 14 }}>Teléfono</label>
                         <div style={{ position: 'relative' }}>
                             <FiPhone size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                            <input type="tel" className="form-control" value={form.telefono}
+                            <input id="profile-phone" type="tel" className="form-control" value={form.telefono}
                                 onChange={handlePhoneChange} maxLength={10} inputMode="numeric"
                                 placeholder="10 dígitos" style={{ height: 48, paddingLeft: 42 }} />
                         </div>

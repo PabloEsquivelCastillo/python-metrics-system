@@ -171,7 +171,12 @@ function Dashboard() {
 
   const pep8Bar = (val) => {
     const pct = val ?? 0;
-    const color = pct >= 90 ? "#00C48C" : pct >= 70 ? "#FFB800" : "#FF3B3B";
+    let color = "#FF3B3B";
+    if (pct >= 90) {
+      color = "#00C48C";
+    } else if (pct >= 70) {
+      color = "#FFB800";
+    }
     return (
       <div className="d-flex align-items-center gap-2">
         <div
@@ -257,6 +262,127 @@ function Dashboard() {
     },
   );
 
+  const renderBatchRows = ({ batch, analyses: batchAnalyses }) => {
+    const batchId = batch?.batch_id ?? batchAnalyses[0]?.analysis_id;
+    const expanded = isBatchExpanded(batchId);
+    const totalFiles = batch?.total_files ?? batchAnalyses.length;
+    const uploadDate = batch?.upload_date || batchAnalyses[0]?.analysis_date;
+    const batchLabel = uploadDate
+      ? `Carga del ${new Date(uploadDate).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}`
+      : "Carga sin fecha registrada";
+
+    const fileRows = expanded
+      ? batchAnalyses.map((a) => (
+          <tr key={a.analysis_id}>
+            <td style={{ paddingLeft: 44, fontWeight: 500 }}>
+              <i
+                className="bi bi-file-earmark-code me-2"
+                style={{ color: "#2C89F5" }}
+              ></i>
+              {a.file_name}
+            </td>
+            <td
+              className="d-none d-md-table-cell"
+              style={{ color: "#6b7280" }}
+            >
+              {a.analysis_date
+                ? new Date(a.analysis_date).toLocaleDateString("es-MX")
+                : "—"}
+            </td>
+            <td>{qualityBadge(a.quality_classification)}</td>
+            <td className="d-none d-sm-table-cell">{pep8Bar(a.pep8_compliance)}</td>
+            <td
+              className="d-none d-lg-table-cell"
+              style={{ color: "#6b7280", fontSize: 13 }}
+            >
+              {a.file_size_kb} KB
+            </td>
+            <td>
+              <button
+                className="btn btn-sm"
+                onClick={() => setSelectedId(a.analysis_id)}
+                style={{
+                  background: "rgba(44,137,245,0.08)",
+                  color: "#2C89F5",
+                  borderRadius: 10,
+                  fontWeight: 500,
+                  fontSize: 13,
+                }}
+              >
+                Ver resumen
+              </button>
+            </td>
+          </tr>
+        ))
+      : [];
+
+    return [
+      <tr
+        key={`batch-${batchId}`}
+        style={{ background: "rgba(44,137,245,0.04)" }}
+      >
+        <td colSpan={6} style={{ padding: "14px 24px" }}>
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+            <button
+              type="button"
+              className="btn p-0 d-inline-flex align-items-center gap-2"
+              onClick={() => toggleBatch(batchId)}
+              style={{
+                color: "#1f2937",
+                fontWeight: 700,
+                boxShadow: "none",
+              }}
+            >
+              {expanded ? (
+                <FiChevronDown size={16} />
+              ) : (
+                <FiChevronRight size={16} />
+              )}
+              <FiFolder size={18} color="#2C89F5" />
+              <span>{batchLabel}</span>
+            </button>
+
+            <div
+              className="d-flex flex-wrap gap-3"
+              style={{ color: "#6b7280", fontSize: 13 }}
+            >
+              <span>{totalFiles} archivo(s)</span>
+              <span>Estado: {formatBatchStatus(batch?.status)}</span>
+            </div>
+          </div>
+        </td>
+      </tr>,
+      ...fileRows,
+    ];
+  };
+
+  let tableRows = paginated.flatMap(renderBatchRows);
+  if (loading) {
+    tableRows = [
+      <tr key="loading">
+        <td colSpan={6} className="text-center py-5 text-muted">
+          <ApiSpinner
+            mode="panel"
+            title="Cargando análisis"
+            subtitle="Estamos consultando los archivos ya procesados."
+            compact
+          />
+        </td>
+      </tr>,
+    ];
+  } else if (paginated.length === 0) {
+    tableRows = [
+      <tr key="empty">
+        <td colSpan={6} className="text-center py-5">
+          <FiUploadCloud size={40} color="#ccc" />
+          <p className="text-muted mt-2 mb-0">
+            No hay análisis aún. Sube archivos .py para comenzar.
+          </p>
+        </td>
+      </tr>,
+    ];
+  }
+
   return (
     <div className="container-fluid px-4 py-4 fade-in-up">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
@@ -316,129 +442,7 @@ function Dashboard() {
                 </tr>
               </thead>
             )}
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-5 text-muted">
-                    <ApiSpinner
-                      mode="panel"
-                      title="Cargando análisis"
-                      subtitle="Estamos consultando los archivos ya procesados."
-                      compact
-                    />
-                  </td>
-                </tr>
-              ) : paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-5">
-                    <FiUploadCloud size={40} color="#ccc" />
-                    <p className="text-muted mt-2 mb-0">
-                      No hay análisis aún. Sube archivos .py para comenzar.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                paginated.flatMap(({ batch, analyses: batchAnalyses }) => {
-                  const batchId =
-                    batch?.batch_id ?? batchAnalyses[0]?.analysis_id;
-                  const expanded = isBatchExpanded(batchId);
-                  const totalFiles = batch?.total_files ?? batchAnalyses.length;
-                  const uploadDate =
-                    batch?.upload_date || batchAnalyses[0]?.analysis_date;
-                  const batchLabel = uploadDate
-                    ? `Carga del ${new Date(uploadDate).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}`
-                    : "Carga sin fecha registrada";
-
-                  return [
-                    <tr
-                      key={`batch-${batchId}`}
-                      style={{ background: "rgba(44,137,245,0.04)" }}
-                    >
-                      <td colSpan={6} style={{ padding: "14px 24px" }}>
-                        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
-                          <button
-                            type="button"
-                            className="btn p-0 d-inline-flex align-items-center gap-2"
-                            onClick={() => toggleBatch(batchId)}
-                            style={{
-                              color: "#1f2937",
-                              fontWeight: 700,
-                              boxShadow: "none",
-                            }}
-                          >
-                            {expanded ? (
-                              <FiChevronDown size={16} />
-                            ) : (
-                              <FiChevronRight size={16} />
-                            )}
-                            <FiFolder size={18} color="#2C89F5" />
-                            <span>{batchLabel}</span>
-                          </button>
-
-                          <div
-                            className="d-flex flex-wrap gap-3"
-                            style={{ color: "#6b7280", fontSize: 13 }}
-                          >
-                            <span>{totalFiles} archivo(s)</span>
-                            <span>
-                              Estado: {formatBatchStatus(batch?.status)}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>,
-                    ...(expanded
-                      ? batchAnalyses.map((a) => (
-                          <tr key={a.analysis_id}>
-                            <td style={{ paddingLeft: 44, fontWeight: 500 }}>
-                              <i
-                                className="bi bi-file-earmark-code me-2"
-                                style={{ color: "#2C89F5" }}
-                              ></i>
-                              {a.file_name}
-                            </td>
-                            <td
-                              className="d-none d-md-table-cell"
-                              style={{ color: "#6b7280" }}
-                            >
-                              {a.analysis_date
-                                ? new Date(a.analysis_date).toLocaleDateString(
-                                    "es-MX",
-                                  )
-                                : "—"}
-                            </td>
-                            <td>{qualityBadge(a.quality_classification)}</td>
-                            <td className="d-none d-sm-table-cell">
-                              {pep8Bar(a.pep8_compliance)}
-                            </td>
-                            <td
-                              className="d-none d-lg-table-cell"
-                              style={{ color: "#6b7280", fontSize: 13 }}
-                            >
-                              {a.file_size_kb} KB
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => setSelectedId(a.analysis_id)}
-                                style={{
-                                  background: "rgba(44,137,245,0.08)",
-                                  color: "#2C89F5",
-                                  borderRadius: 10,
-                                  fontWeight: 500,
-                                  fontSize: 13,
-                                }}
-                              >
-                                Ver resumen
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      : []),
-                  ];
-                })
-              )}
-            </tbody>
+            <tbody>{tableRows}</tbody>
           </table>
         </div>
 

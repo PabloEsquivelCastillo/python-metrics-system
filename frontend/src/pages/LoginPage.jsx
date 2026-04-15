@@ -53,11 +53,11 @@ function LoginPage() {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
+                        <label htmlFor="login-email" className="form-label fw-medium" style={{ fontSize: 14 }}>Correo electrónico</label>
                         <div style={{ position: 'relative' }}>
                             <FiMail size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                             <input
-                                type="email" name="email" className="form-control"
+                                id="login-email" type="email" name="email" className="form-control"
                                 placeholder="tu@correo.com"
                                 value={form.email} onChange={handleChange} required
                                 style={{ height: 48, paddingLeft: 42 }}
@@ -66,11 +66,11 @@ function LoginPage() {
                     </div>
 
                     <div className="mb-4">
-                        <label className="form-label fw-medium" style={{ fontSize: 14 }}>Contraseña</label>
+                        <label htmlFor="login-password" className="form-label fw-medium" style={{ fontSize: 14 }}>Contraseña</label>
                         <div style={{ position: 'relative' }}>
                             <FiLock size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                             <input
-                                type={showPass ? 'text' : 'password'} name="password" className="form-control"
+                                id="login-password" type={showPass ? 'text' : 'password'} name="password" className="form-control"
                                 placeholder="Ingresa tu contraseña"
                                 value={form.password} onChange={handleChange} required
                                 style={{ height: 48, paddingLeft: 42, paddingRight: 45 }}

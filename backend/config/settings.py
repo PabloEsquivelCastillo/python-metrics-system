@@ -11,21 +11,28 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+from loguru import logger
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOGGING_CONFIG = None
+
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ik74c_5+x)ivt5nuc*ny8%a*fmat6+vdufnq%p6ri&k^n)n&(e'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,16 +44,30 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'usuarios',
+    'analisis',
+    'drf_spectacular',
+    'audit',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit.middleware.BitacoraUsuarioMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_URL,
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -74,8 +95,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD':config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT':config('DB_PORT', default='3306'),
     }
 }
 
@@ -104,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
 
@@ -115,3 +140,81 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  
+    'ROTATE_REFRESH_TOKENS': True, 
+    'BLACKLIST_AFTER_ROTATION': True,    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,     
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'UPDATE_LAST_LOGIN': True,
+}
+
+
+AUTH_USER_MODEL = 'usuarios.MiUsuario'
+
+LOGURU_LOGGING = {
+    'handlers': [
+        {
+            'sink': LOGS_DIR / 'debug.log',
+            'level': 'DEBUG',
+            'filter': lambda record: record['level'].no < logger.level('ERROR').no,
+            'format': '{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}',
+            'rotation': '10 MB',
+            'retention': '2 days',
+            'compression': 'zip',
+        },
+        {
+            'sink': LOGS_DIR / 'error.log',
+            'level': 'ERROR',
+            'filter': lambda record: record['level'].no >= logger.level('ERROR').no,
+            'format': '{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}',
+            'rotation': '10 MB',
+            'retention': '2 days',
+            'compression': 'zip',
+            'backtrace': True,
+            'diagnose': True,
+        },
+    ]
+}
+
+logger.configure(**LOGURU_LOGGING)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'loguru': {
+            'class': 'config.interceptor.InterceptorHandler',
+        },
+    },
+    'root': {
+        'handlers': ['loguru'],
+        'level': 'DEBUG',
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Python Metrics API',
+    'DESCRIPTION': 'Documentación interactiva',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}

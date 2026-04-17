@@ -115,7 +115,7 @@ class UploadBatchView(APIView):
                 'files': [f'Solo puedes subir máximo {MAX_FILES} archivos.']
             })
             
-        MAX_SIZE = 2 * 1024  # bytes
+        MAX_SIZE = 2 * 1024 * 1024  # 2 MB en bytes
 
         oversized = [f.name for f in files if f.size > MAX_SIZE]
         if oversized:
@@ -125,7 +125,7 @@ class UploadBatchView(APIView):
                 oversized,
             )
             raise ValidationError({
-                'files': [f'Cada archivo debe ser menor o igual a 2 KB. Archivos inválidos: {oversized}']
+                'files': [f'Cada archivo debe ser menor o igual a 2 MB. Archivos inválidos: {oversized}']
             })
             
         invalid = [f.name for f in files if not f.name.endswith('.py')]

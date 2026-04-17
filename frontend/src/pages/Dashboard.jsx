@@ -62,14 +62,14 @@ function Dashboard() {
       return;
     }
 
-    const MAX_SIZE = 2 * 1024;
+    const MAX_SIZE = 2 * 1024 * 1024;
     const oversized = Array.from(files).filter((f) => f.size > MAX_SIZE);
 
     if (oversized.length) {
       Swal.fire({
         icon: "warning",
         title: "Archivo demasiado grande",
-        text: "Cada archivo debe ser menor o igual a 2 KB.",
+        text: "Cada archivo debe ser menor o igual a 2 MB.",
         confirmButtonColor: "#2C89F5",
       });
       e.target.value = "";
